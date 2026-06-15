@@ -1,0 +1,40 @@
+services:
+
+  my-web:
+    build:
+      context: ./client
+      dockerfile: ../.config/dev/docker/node.Dockerfile
+    container_name: my-web
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    env_file:
+      - ./client/.env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/mydb?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: "sh -c 'pnpm prisma migrate dev && pnpm dev'"
+
+  postgres:
+    image: postgres:18
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:

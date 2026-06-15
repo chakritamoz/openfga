@@ -1,0 +1,42 @@
+{
+    "realm": "my-realm",
+    "enabled": true,
+    "sslRequired": "none",
+    "registrationAllowed": false,
+    "loginWithEmailAllowed": true,
+    "duplicateEmailsAllowed": false,
+    "clients": [
+        {
+            "clientId": "my-realm-client",
+            "enabled": true,
+            "secret": "my-realm-secret",
+            "publicClient": false,
+            "directAccessGrantsEnabled": false,
+            "serviceAccountsEnabled": false,
+            "standardFlowEnabled": true,
+            "implicitFlowEnabled": false,
+            "redirectUris": [
+                "http://localhost/*"
+            ],
+            "webOrigins": [
+                "http://localhost"
+            ],
+            "protocol": "openid-connect"
+        }
+    ],
+    "users": [
+        {
+            "username": "test",
+            "enabled": true,
+            "email": "test@my-realm.local",
+            "emailVerified": true,
+            "credentials": [
+                {
+                    "type": "password",
+                    "value": "password",
+                    "temporary": false
+                }
+            ]
+        }
+    ]
+}
