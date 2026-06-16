@@ -1,5 +1,22 @@
 services:
 
+  postgres:
+    image: postgres:18
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d mydb" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   my-web:
     build:
       context: ./client
@@ -19,22 +36,52 @@ services:
         condition: service_healthy
     command: "sh -c 'pnpm prisma migrate dev && pnpm dev'"
 
-  postgres:
+  openfga-pgsql:
     image: postgres:18
-    container_name: postgres
+    container_name: openfga-pgsql
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=mydb
+      - POSTGRES_DB=openfga
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql
+      - openfga-data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d mydb"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d openfga" ]
       interval: 5s
       timeout: 5s
       retries: 10
 
+  migrate:
+    depends_on:
+      openfga-pgsql:
+        condition: service_healthy
+    image: openfga/openfga:v1.17.1
+    container_name: migrate
+    command: migrate
+    environment:
+      - OPENFGA_DATASTORE_ENGINE=postgres
+      - OPENFGA_DATASTORE_URI=postgresql://postgres:postgres@openfga-pgsql:5432/openfga?sslmode=disable
+
+  openfga:
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    image: openfga/openfga:v1.17.1
+    container_name: openfga
+    environment:
+      - FGA_API_TOKEN=szasNW7+9J8nolYiLd7m2cpPzEnVjzBP9IWuEOy7pfU=
+      - OPENFGA_DATASTORE_ENGINE=postgres
+      - OPENFGA_DATASTORE_URI=postgresql://postgres:postgres@openfga-pgsql:5432/openfga?sslmode=disable
+      - OPENFGA_LOG_FORMAT=json
+    command: run
+    ports:
+      - "8080:8080" # Needed for the http server
+      - "8081:8081" # Needed for the gRPC server
+      - "8082:8082" # Needed for the playground ( Do not expose this port in production )
+
 volumes:
   postgres-data:
+  openfga-data:
+
