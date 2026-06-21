@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "setup-openfga-store": "tsx script/openfga/setup-openfga-store.ts"
   },
   "dependencies": {
     "@openfga/sdk": "^0.9.6",
@@ -16,7 +17,8 @@
     "next": "16.2.9",
     "pg": "^8.21.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "tsx": "^4.22.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

@@ -29,8 +29,6 @@ services:
       - /app/node_modules
     env_file:
       - ./client/.env
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/mydb?schema=public
     depends_on:
       postgres:
         condition: service_healthy
@@ -77,9 +75,9 @@ services:
       - OPENFGA_LOG_FORMAT=json
     command: run
     ports:
-      - "8080:8080" # Needed for the http server
-      - "8081:8081" # Needed for the gRPC server
-      - "8082:8082" # Needed for the playground ( Do not expose this port in production )
+      - "8090:8080" # Needed for the http server
+      - "8091:8081" # Needed for the gRPC server
+      - "8092:8082" # Needed for the playground ( Do not expose this port in production )
 
 volumes:
   postgres-data:

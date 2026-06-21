@@ -1,0 +1,43 @@
+model
+    schema 1.1
+
+type user
+
+type group
+    relations
+        define member: [user]
+
+type role
+    relations
+        define member: [user, group#member]
+
+type realm
+    relations
+        define can-create-org: [role#member]
+        define can-delete-org: [role#member]
+        define can-view-org: [role#member]
+        define can-edit-org: [role#member]
+
+        define can-create-asset: [role#member]
+        define can-delete-asset: [role#member]
+        define can-view-asset: [role#member]
+        define can-edit-asset: [role#member]
+
+type organization
+    relations
+        define parent: [realm] 
+        define can-view-org: [role#member] or can-view-org from parent
+        define can-edit-org: [role#member] or can-edit-org from parent
+
+        define can-create-asset: [role#member] or can-create-asset from parent
+        define can-delete-asset: [role#member] or can-delete-asset from parent
+        define can-view-asset: [role#member] or can-view-asset from parent
+        define can-edit-asset: [role#member] or can-edit-asset from parent
+
+type asset
+    relations
+        define owner: [user]
+        define parent: [organization]
+        define can-view-asset: [role#member] or owner or can-view-asset from parent
+        define can-edit-asset: [role#member] or owner or can-edit-asset from parent
+        define can-delete-asset: owner or can-delete-asset from parent

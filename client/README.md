@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# OpenFGA + Next.js Setup
 
-## Getting Started
+## Start Services
 
-First, run the development server:
+From the repo root:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+docker compose up -d
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+This starts:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Next.js: http://localhost:3000
+- OpenFGA API: http://localhost:8090
+- OpenFGA Playground: http://localhost:8092
+- Postgres for the app
+- Postgres for OpenFGA
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Create OpenFGA Store
 
-## Learn More
+From `client/`, run the setup script against the OpenFGA port exposed on your host:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+FGA_API_URL=http://localhost:8090 pnpm tsx script/setup-openfga-store.ts
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The script creates:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- an OpenFGA store
+- a simple authorization model with `user` and `group`
+- one demo tuple: `user:demo` is `admin` of `group:demo`
 
-## Deploy on Vercel
+It prints values like:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+FGA_STORE_ID=...
+FGA_MODEL_ID=...
+FGA_DEMO_CHECK=true
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Configure Next.js
+
+Put the printed values in `client/.env`:
+
+```env
+DATABASE_URL="postgresql://postgres:postgres@postgres:5432/mydb?schema=public"
+
+FGA_API_URL="http://openfga:8080"
+FGA_STORE_ID="..."
+FGA_MODEL_ID="..."
+```
+
+Use `http://openfga:8080` when Next.js runs inside Docker.
+Use `http://localhost:8090` when running scripts from your host machine.
+
+## Check It
+
+Open:
+
+```text
+http://localhost:3000/api/fga-demo
+```
+
+Expected response:
+
+```json
+{"allowed":true}
+```
+
+## Use In Server Code
+
+```ts
+import { canUser } from "@/lib/openfga";
+
+const allowed = await canUser("demo", "admin", "group:demo");
+```
+
+Keep OpenFGA calls server-side only: route handlers, server actions, or server components.
